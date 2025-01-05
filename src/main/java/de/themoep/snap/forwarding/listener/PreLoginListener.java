@@ -152,6 +152,11 @@ public class PreLoginListener extends ForwardingListener {
             public Unsafe unsafe() {
                 return (Unsafe) snap.unsupported("Unsafe is not supported in Snap!");
             }
+            @Override
+            public CompletableFuture<byte[]> sendData(String channel, byte[] data) {
+                snap.unsupported("Sending data on a connection is not supported in Velocity's API!");
+                return CompletableFuture.completedFuture(null);
+            }
         }, (e, t) -> {
             if (e.isCancelled()) {
                 event.setResult(com.velocitypowered.api.event.connection.PreLoginEvent.PreLoginComponentResult.denied(
