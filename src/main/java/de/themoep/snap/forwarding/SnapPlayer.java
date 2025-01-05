@@ -126,6 +126,7 @@ public class SnapPlayer extends SnapCommandSender implements ProxiedPlayer {
                 return player.getRemoteAddress();
             }
 
+
             @Override
             public SocketAddress getSocketAddress() {
                 return getAddress();
@@ -154,6 +155,11 @@ public class SnapPlayer extends SnapCommandSender implements ProxiedPlayer {
             @Override
             public Unsafe unsafe() {
                 return (Unsafe) snap.unsupported("Unsafe is not supported by Snap!");
+            }
+            @Override
+            public CompletableFuture<byte[]> sendData(String channel, byte[] data) {
+                snap.unsupported("Sending data on a connection is not supported in Velocity's API!");
+                return CompletableFuture.completedFuture(null);
             }
         };
         displayName = player.getUsername();
