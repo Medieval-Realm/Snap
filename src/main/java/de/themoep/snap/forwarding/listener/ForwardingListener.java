@@ -19,6 +19,7 @@ package de.themoep.snap.forwarding.listener;
  */
 
 import com.velocitypowered.api.proxy.InboundConnection;
+import com.velocitypowered.api.proxy.Player;
 import de.themoep.snap.Snap;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.config.ListenerInfo;
@@ -28,6 +29,7 @@ import net.md_5.bungee.api.plugin.Event;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public abstract class ForwardingListener {
     protected final Snap snap;
@@ -92,6 +94,20 @@ public abstract class ForwardingListener {
             @Override
             public boolean isLegacy() {
                 return connection.getProtocolVersion().isLegacy();
+            }
+
+            @Override
+            public boolean isTransferred() {
+                if (connection instanceof Player player) {
+                    return snap.isTransferred(player.getUniqueId());
+                }
+                snap.unsupported("Tried to check an InboundConnection which is not a Player (" + connection.getClass().getName() + ") for whether it was transferred!");
+                return false;
+            }
+
+            @Override
+            public CompletableFuture<byte[]> retrieveCookie(String key) {
+                return snap.retrieveCookie(connection, key);
             }
 
             @Override

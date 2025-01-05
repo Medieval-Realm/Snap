@@ -25,6 +25,8 @@ import de.themoep.snap.Snap;
 import de.themoep.snap.SnapUtils;
 import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.key.InvalidKeyException;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.md_5.bungee.api.Callback;
 import net.md_5.bungee.api.ChatMessageType;
@@ -47,6 +49,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 public class SnapPlayer extends SnapCommandSender implements ProxiedPlayer {
@@ -60,7 +63,7 @@ public class SnapPlayer extends SnapCommandSender implements ProxiedPlayer {
         connection = new PendingConnection() {
             @Override
             public String getName() {
-                return player.getUsername();
+                return SnapPlayer.this.player.getUsername();
             }
 
             @Override
@@ -106,6 +109,16 @@ public class SnapPlayer extends SnapCommandSender implements ProxiedPlayer {
             @Override
             public boolean isLegacy() {
                 return player.getProtocolVersion().isLegacy();
+            }
+
+            @Override
+            public boolean isTransferred() {
+                return snap.isTransferred(player.getUniqueId());
+            }
+
+            @Override
+            public CompletableFuture<byte[]> retrieveCookie(String key) {
+                return snap.retrieveCookie(player, key);
             }
 
             @Override
@@ -421,6 +434,25 @@ public class SnapPlayer extends SnapCommandSender implements ProxiedPlayer {
     public Scoreboard getScoreboard() {
         // TODO: Support that? How? Velocity doesn't do this.
         return (Scoreboard) snap.unsupported("Scoreboards are not supported by Snap");
+    }
+
+    @Override
+    public CompletableFuture<byte[]> retrieveCookie(String s) {
+        return getPendingConnection().retrieveCookie(s);
+    }
+
+    @Override
+    public void storeCookie(String key, byte[] bytes) {
+        try {
+            player.storeCookie(Key.key(key), bytes);
+        } catch (InvalidKeyException e) {
+            snap.unsupported("Tried to store cookie at key '" + key + "' but the provided key was invalid!");
+        }
+    }
+
+    @Override
+    public void transfer(String host, int port) {
+        player.transferToHost(new InetSocketAddress(host, port));
     }
 
     @Override

@@ -22,7 +22,10 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import de.themoep.snap.Snap;
 import de.themoep.snap.forwarding.SnapServerInfo;
+import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.event.ServerConnectEvent;
+
+import java.util.Objects;
 
 public class ServerConnectListener extends ForwardingListener {
 
@@ -32,9 +35,22 @@ public class ServerConnectListener extends ForwardingListener {
 
     @Subscribe
     public void on(ServerPreConnectEvent event) {
+        ServerInfo targetServer = snap.getServerInfo(event.getResult().getServer()
+                .orElse(snap.getProxy().getConfiguration().getAttemptConnectionOrder().stream()
+                        .map(serverName -> snap.getProxy().getServer(serverName).orElse(null))
+                        .filter(Objects::nonNull)
+                        .findFirst()
+                        .orElse(null)));
+
+        if (targetServer == null) {
+            event.setResult(ServerPreConnectEvent.ServerResult.denied());
+            snap.getLogger().warn("No target server found for " + event.getPlayer().getUsername() + "! Denying connection. Please make sure you have valid servers in your 'try' config list!");
+            return;
+        }
+
         ServerConnectEvent e = new ServerConnectEvent(
                 snap.getPlayer(event.getPlayer()),
-                event.getResult().getServer().map(snap::getServerInfo).orElse(null),
+                targetServer,
                 ServerConnectEvent.Reason.UNKNOWN,
                 null
         );

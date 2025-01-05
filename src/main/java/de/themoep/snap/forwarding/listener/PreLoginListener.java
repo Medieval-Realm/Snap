@@ -31,6 +31,7 @@ import net.md_5.bungee.api.event.PreLoginEvent;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class PreLoginListener extends ForwardingListener {
 
@@ -105,6 +106,16 @@ public class PreLoginListener extends ForwardingListener {
             @Override
             public boolean isLegacy() {
                 return event.getConnection().getProtocolVersion().isLegacy();
+            }
+
+            @Override
+            public boolean isTransferred() {
+                return snap.isTransferred(event.getUniqueId());
+            }
+
+            @Override
+            public CompletableFuture<byte[]> retrieveCookie(String key) {
+                return snap.retrieveCookie(event.getConnection(), key);
             }
 
             @Override
